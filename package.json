@@ -7,7 +7,7 @@
     "node": "18.x"
   },
 "scripts": {
-  "dev": "nodemon src/app.ts",
+  "dev": "nodemon dist/app.js",
   "start": "node dist/app.js",
   "build": "tsc",
   "typecheck": "tsc --noEmit",
