@@ -1,28 +1,15 @@
 {
-    "version": 2,
-    "builds": [
-      {
-        "src": "src/app.ts",
-        "use": "@vercel/node",
-        "config": {
-          "includeFiles": [
-            "dist/**"
-          ]
-        }
-      }
-    ],
-    "routes": [
-      {
-        "src": "/(.*)",
-        "dest": "dist/app.js"
-      }
-    ],
-    "buildCommand": "npm run build",
-    "crons": [
-      {
-        "path": "/api/cron",
-        "schedule": "0 0 * * *"
-      }
-    ]
-  }
-  
+  "version": 2,
+  "builds": [
+    {
+      "src": "src/app.ts",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/dist/app.js"
+    }
+  ]
+}
