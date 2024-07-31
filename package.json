@@ -8,7 +8,7 @@
   },
 "scripts": {
   "dev": "nodemon src/app.ts",
-  "start": "node dist/app.js",
+  "start": "node src/app.js",
   "build": "tsc && cp -r src/public dist/public",
   "typecheck": "tsc --noEmit",
   "postinstall": "prisma generate",
