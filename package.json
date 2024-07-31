@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "",
   "main": "app.ts",
+  "engines": {
+    "node": "18.x"
+  },
   "scripts": {
     "dev": "nodemon app.ts",
     "start": "nodemon app.ts",
