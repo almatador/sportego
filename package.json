@@ -2,13 +2,13 @@
   "name": "sportego",
   "version": "1.0.0",
   "description": "",
-  "main": "src/app.js",
+  "main": "./app.js",
   "engines": {
     "node": "18.x"
   },
 "scripts": {
-  "dev": "nodemon src/app.ts",
-  "start": "node src/app.js",
+  "dev": "nodemon app.ts",
+  "start": "node app.js",
   "build": "tsc && cp -r src/public dist/public",
   "typecheck": "tsc --noEmit",
   "postinstall": "prisma generate",
