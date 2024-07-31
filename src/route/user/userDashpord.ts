@@ -1,7 +1,6 @@
 
 import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
-import { error } from 'console';
 import crypto from 'crypto';
 
 const generateSecretKey = () => {
@@ -11,6 +10,16 @@ const generateSecretKey = () => {
 const userDashpord = Router();
 const prisma = new PrismaClient();
 
+
+userDashpord.get('/GetAllUser', async (req, res) => {
+  try {
+      const admins = await prisma.user.findMany();
+      res.status(200).json(admins);
+  } catch (error) {
+      console.error("Get All Admin error:", error);
+      res.status(500).send("حدث مشكلة في السيرفر");
+  }  
+});
 
 userDashpord.get('/users/:id', async (req, res) => {
     const { id } = req.params;
