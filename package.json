@@ -7,9 +7,11 @@
     "node": "18.x"
   },
 "scripts": {
+  "build": "prisma generate && rimraf dist && tsc",
   "dev": "nodemon app.ts",
-  "start": "node app.js",
-  "build": "tsc && cp -r src/public dist/public",
+  "start": "nodemon app.ts",
+  "prestart": "npm run build",
+
   "typecheck": "tsc --noEmit",
   "postinstall": "prisma generate",
   "migrate": "prisma migrate",

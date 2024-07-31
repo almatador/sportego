@@ -192,3 +192,4 @@ adminperm.get('/getPermissionWithAdmins/:permissionId', (req, res) => __awaiter(
     }
 }));
 exports.default = adminperm;
+//# sourceMappingURL=adminperm.js.map

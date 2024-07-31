@@ -1,8 +1,8 @@
 import express from 'express';
 import path from 'path';
 import bodyParser from 'body-parser';
-import admin from './route/admin/adminAuth';
-import adminperm from './route/admin/adminperm';
+import admin from './src/route/admin/adminAuth';
+import adminperm from './src/route/admin/adminperm';
 
 const app = express();
 const port = 3000;

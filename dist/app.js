@@ -15,8 +15,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const path_1 = __importDefault(require("path"));
 const body_parser_1 = __importDefault(require("body-parser"));
-const adminAuth_1 = __importDefault(require("./route/admin/adminAuth"));
-const adminperm_1 = __importDefault(require("./route/admin/adminperm"));
+const adminAuth_1 = __importDefault(require("./src/route/admin/adminAuth"));
+const adminperm_1 = __importDefault(require("./src/route/admin/adminperm"));
 const app = (0, express_1.default)();
 const port = 3000;
 app.use(express_1.default.static(path_1.default.join(__dirname, 'public')));
@@ -31,3 +31,4 @@ app.listen(port, () => {
     console.log(`🚀 Server ready at: http://localhost:${port}`);
 });
 exports.default = app;
+//# sourceMappingURL=app.js.map
