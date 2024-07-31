@@ -2,7 +2,7 @@
   "name": "sportego",
   "version": "1.0.0",
   "description": "",
-  "main": "dist/app.js",
+  "main": "src/app.js",
   "engines": {
     "node": "18.x"
   },
