@@ -1,0 +1,131 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  NEW
+}
+
+model User {
+  id            Int          @id @default(autoincrement())
+  name          String
+  email         String       @unique
+  password      String
+  confPassword  String
+  createdAt     DateTime     @default(now())
+  deletedAt     DateTime?
+  updatedAt     DateTime     @updatedAt
+  city          City         @relation(fields: [cityId], references: [id])
+  cityId        Int
+  country       Country      @relation(fields: [countryId], references: [id])
+  countryId     Int
+  secretKeyuser secretKeyuser[]
+  status        UserStatus
+}
+
+model Trainer {
+  id    Int    @id @default(autoincrement())
+  name  String
+  email String @unique
+  secretKeyTrainer   secretKeyTrainer[]
+  city         City                @relation(fields: [cityId], references: [id])
+  cityId       Int
+  country      Country             @relation(fields: [countryId], references: [id])
+  countryId    Int
+
+}
+model drnutrition {
+  id    Int    @id @default(autoincrement())
+  name  String
+  email String @unique
+  secretKeydrnutrition   secretKeydrnutrition[]
+  city         City                @relation(fields: [cityId], references: [id])
+  cityId       Int
+  country      Country             @relation(fields: [countryId], references: [id])
+  countryId    Int
+}
+model Admin {
+  id          Int          @id @default(autoincrement())
+  name        String
+  username    String       @unique
+  email       String       @unique
+  phoneNumber String
+  password    String
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  permissions Permission[] @relation("AdminPermissions")
+  deletedAt   DateTime? 
+  secretKeyadmin secretKeyadmin[]
+}
+
+
+
+model secretKeyadmin {
+  id            Int        @id @default(autoincrement())
+  admin         Admin?     @relation(fields: [adminId], references: [id])
+  adminId       Int?
+  token         String
+}
+model secretKeydrnutrition{
+  id            Int        @id @default(autoincrement())
+  token         String
+
+  drnutrition   drnutrition? @relation(fields: [drnutritionId], references: [id])
+  drnutritionId Int?
+}
+model secretKeyTrainer{
+  id            Int        @id @default(autoincrement())
+  token         String
+
+  Trainer       Trainer    @relation(fields: [TrainerId], references: [id])
+  TrainerId     Int
+}
+model secretKeyuser {
+  id            Int        @id @default(autoincrement())
+  user          User?      @relation(fields: [userId], references: [id])
+  userId        Int?
+  token         String
+
+}
+
+
+
+model Country {
+  id          Int       @id @default(autoincrement())
+  countryName String
+  cities      City[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  students    User[]
+  Trainer     Trainer[]
+  drnutrition drnutrition[]
+}
+
+model City {
+  id        Int       @id @default(autoincrement())
+  cityName  String
+  country   Country   @relation(fields: [countryId], references: [id])
+  countryId Int
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  User  User[]
+  Trainer     Trainer[]
+  drnutrition drnutrition[]
+}
+model Permission {
+  id      Int    @id @default(autoincrement())
+  name    String
+  admins  Admin[]  @relation("AdminPermissions")
+}
