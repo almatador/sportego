@@ -6,17 +6,16 @@
   "engines": {
     "node": "18.x"
   },
-"scripts": {
-  "build": "prisma generate && rimraf dist && tsc",
-  "dev": "nodemon app.ts",
-  "start": "nodemon app.ts",
-  "prestart": "npm run build",
-
-  "typecheck": "tsc --noEmit",
-  "postinstall": "prisma generate",
-  "migrate": "prisma migrate",
-  "test": "echo \"Error: no test specified\" && exit 1"
-},
+  "scripts": {
+    "build": "prisma generate && rimraf dist && tsc",
+    "dev": "nodemon app.ts",
+    "start": "nodemon app.ts",
+    "prestart": "npm run build",
+    "typecheck": "tsc --noEmit",
+    "postinstall": "prisma generate",
+    "migrate": "prisma migrate",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/almatador/sportego.git"
@@ -36,10 +35,15 @@
   },
   "dependencies": {
     "@prisma/client": "^5.17.0",
+    "@types/cookie-parser": "^1.4.7",
+    "@types/cors": "^2.8.17",
+    "@types/jsonwebtoken": "^9.0.6",
+    "@types/multer": "^1.4.11",
     "bcrypt": "^5.1.1",
     "body-parser": "^1.20.2",
     "express": "^4.19.2",
     "jsonwebtoken": "^9.0.2",
+    "mysql2": "^3.11.0",
     "nodemon": "^3.1.4",
     "prisma": "^5.17.0"
   }

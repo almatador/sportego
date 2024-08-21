@@ -1,115 +1,117 @@
 import express, { Request, Response } from 'express';
-import bcrypt from 'bcrypt';
-import { PrismaClient } from '@prisma/client';
-import crypto from 'crypto';
+import connection from './../../database/database';
+import { hashPassword } from './../../faunction/passwoerds';
+import { generateToken, verifyPassword } from '../../faunction/passwoerds';
+import mysql from 'mysql2/promise';
 
 const admin = express.Router();
-const prisma = new PrismaClient();
 
-const generateSecretKey = () => {
-    return crypto.randomBytes(64).toString('hex');
-};
-
-admin.get('/GetAllAdmin', async (req: Request, res: Response) => {
+interface admin {
+    id: number;
+    email: string;
+    password: string;
+    role:string;
+    phoneNumber:string;
+}
+// الحصول على جميع الإداريين
+admin.get('/GetAllAdmin', async (req, res) => {
     try {
-        const admins = await prisma.admin.findMany();
+        const [admins]: any = await connection.execute('SELECT * FROM super_admin');
         res.status(200).json(admins);
     } catch (error) {
         console.error("Get All Admin error:", error);
         res.status(500).send("حدث مشكلة في السيرفر");
-    }  
+    }
 });
 
-admin.post('/createAdmin', async (req: Request, res: Response) => {
-    const { email, password, name, phoneNumber, username } = req.body;
-    console.log(req.body);
+// إنشاء مدير جديد
+admin.post('/create', async (req, res) => {
+    const { name, username, email, phoneNumber, password, role = 'admin' } = req.body;
+
+    if (!name || !username || !email || !phoneNumber || !password) {
+        return res.status(400).json({ error: 'جميع الحقول مطلوبة' });
+    }
+
+    try {
+        const hashedPassword = await hashPassword(password);
+        const query = `
+            INSERT INTO admin (name, username, email, phoneNumber, password, role)
+            VALUES (?, ?, ?, ?, ?, ?)
+        `;
+
+        const [result]: any = await connection.execute(query, [name, username, email, phoneNumber, hashedPassword, role]);
+
+        const newId = result.insertId;
+
+        const token = generateToken(newId); // استخدم الحالة كدور
+        // إضافة مفتاح سري
+        await connection.execute(
+          'INSERT INTO secretkeyadmin (adminId, token) VALUES (?, ?)',
+          [newId, token]
+        );
+        res.cookie('authToken', token, {
+          httpOnly: true,
+          secure: true,
+          maxAge: 3600000,
+        }); res.status(201).json({ id: newId, name, email, password,  token });
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Something went wrong' });
+      }
+    });
     
-    if (!email || !password || !name || !phoneNumber || !username) {
-        return res.status(400).send("الرجاء تقديم جميع الحقول المطلوبة");
-    }
-  
-    try {
-        const saltRounds = 10;
-        const hashedPassword = await bcrypt.hash(password, saltRounds);
-      
-        const newAdmin = await prisma.admin.create({
-            data: {
-                username: username,
-                name: name,
-                email: email,
-                password: hashedPassword,
-                phoneNumber: phoneNumber,
-                secretKeyadmin: {
-                    create: {
-                        token: generateSecretKey(), // Generate and include secret key
-                    }
-                }
-            },
-            include: {
-                secretKeyadmin: true // Include secret keys in the response if needed
-            }
-        });
-        
-        console.log("New Admin Created:", newAdmin);
-
-        res.status(200).json(newAdmin);
-    } catch (error) {
-        console.error("Create Admin error:", error);
-        res.status(500).send("حدثت مشكلة في السيرفر");
-    }
-});
-admin.post("/login", async (req: Request, res: Response) => {
+// تسجيل الدخول
+admin.post('/login', async (req, res) => {
     const { email, password } = req.body;
-
-    if (!email || !password) {
-        return res.status(400).send("الرجاء تقديم البريد الإلكتروني وكلمة المرور");
-    }
   
-    try {
-        const admin = await prisma.admin.findUnique({
-            where: {
-                email: email,
-            },
-        });
-
-        if (admin && bcrypt.compareSync(password, admin.password)) {
-            // توليد التوكن الجديد
-            const newToken = generateSecretKey();
-            
-            // تحديث أو إنشاء التوكن في قاعدة البيانات
-            const secretKeyAdmin = await prisma.secretKeyadmin.findFirst({
-                where: {
-                    adminId: admin.id,
-                },
-            });
-
-            if (secretKeyAdmin) {
-                await prisma.secretKeyadmin.update({
-                    where: {
-                        id: secretKeyAdmin.id,
-                    },
-                    data: {
-                        token: newToken,
-                    },
-                });
-            } else {
-                await prisma.secretKeyadmin.create({
-                    data: {
-                        adminId: admin.id,
-                        token: newToken,
-                    },
-                });
-            }
-
-            res.status(200).json({ admin, token: newToken });
-        } else {
-            res.status(404).send("الايميل او كلمة المرور خطأ");
+    const query = 'SELECT * FROM admin WHERE email = ?';
+  
+    connection.query(query, [email], async (err, results: mysql.RowDataPacket[]) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ error: 'خطأ في التحقق من بيانات المدير.' });
+      }
+  
+      if (!results.length) {
+        return res.status(401).json({ error: 'اسم المستخدم أو كلمة المرور غير صحيحة.' });
+      }
+  
+      const user: admin = results[0] as admin;
+  
+      const match = await verifyPassword(password, user.password);
+      if (!match) {
+        return res.status(401).json({ error: 'اسم المستخدم أو كلمة المرور غير صحيحة.' });
+      }
+  
+      const tokenQuery = 'SELECT * FROM secretkeyadmin WHERE adminId = ?';
+  
+      connection.query(tokenQuery, [user.id], (err, tokenResults: mysql.RowDataPacket[]) => {
+        if (err) {
+          console.error(err);
+          return res.status(500).json({ error: 'خطأ في التحقق من التوكن.' });
         }
-    } catch (error) {
-        console.error("Login error:", error);
-        res.status(500).send("حدث مشكلة في السيرفر");
-    }
-});
+  
+        if (tokenResults.length) {
+          return res.status(403).json({ error: 'حسابك قيد الاستخدام من قبل شخص آخر.' });
+        }
+  
+        const token = generateToken(user.id);
+  
+        const insertTokenQuery = 'INSERT INTO secretkeyadmin (adminId, token) VALUES (?, ?)';
+  
+        connection.query(insertTokenQuery, [user.id, token], (err) => {
+          if (err) {
+            console.error(err);
+            return res.status(500).json({ error: 'خطأ في تخزين التوكن.' });
+          }
+  
+          res.cookie('authToken', token, { httpOnly: true, secure: true });
+          res.status(200).json({ user , token });
+        });
+      });
+    });
+  });
+// تسجيل الخروج
 admin.post('/logout/:id', async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
@@ -118,16 +120,9 @@ admin.post('/logout/:id', async (req: Request, res: Response) => {
             return res.status(400).send('Invalid ID');
         }
 
-        await prisma.secretKeyadmin.updateMany({
-            where: {
-                adminId: parseInt(id)
-            },
-            data: {
-                token: "null"
-            }
-        });
+        await connection.execute('UPDATE secretKeyadmin SET token = NULL WHERE adminId = ?', [parseInt(id)]);
 
-        res.clearCookie('token'); // Adjust the cookie name if different
+        res.clearCookie('token');
         res.status(200).send("تم تسجيل الخروج بنجاح");
     } catch (error) {
         console.error("Logout error:", error);
